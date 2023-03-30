@@ -1,5 +1,7 @@
 [文档](http://wiki.ros.org/rospy?distro=melodic)
 
+只要能导入 `rospy`，python 脚本就能与 ROS 计算图进行交互，无需 [[Catkin 编译系统]]。
+
 ---
 
 # 节点
@@ -12,17 +14,17 @@ rospy.init_node('my_node_name')
 
 - anonymous=True
 
-	匿名参数主要用于运行多个实例且不关心名称的节点。它在节点名称的末尾添加一个随机数，使其独一无二。如果在ROS图上检测到两个同名节点，则旧节点将关闭。
+	匿名参数主要用于运行多个实例且不关心名称的节点。它在节点名称的末尾添加一个随机数，使其独一无二。如果在 ROS 图上检测到两个同名节点，则旧节点将关闭。
 
 - log_level=rospy.INFO
 
-	设置将日志消息发布到rosout的默认日志级别。
+	设置将日志消息发布到 rosout 的最小日志级别。
 
 - disable_signals=True
 
-	关闭rospy的信号处理，使程序可以捕获SEGINT（KeyboardInterrupt，即Ctrl-C）。默认情况下SEGINT会停止ros节点。
+	关闭 rospy 的信号处理，使程序可以捕获 SEGINT（KeyboardInterrupt，即 Ctrl-C）。默认情况下 SEGINT 会停止 ros 节点。使用了类似 `while input()` 的语句时，这样做才能使用 Ctrl-C 退出。
 
-只有创建了节点才能使用[[#日志]]。
+只有创建了节点才能使用 [[#日志]]。
 
 ## 节点状态
 
@@ -37,7 +39,7 @@ rospy.signal_shutdown(reason)  # 手动关闭节点，reason为字符串
 
 # 消息
 
-catkin_make从msg文件生成Python类
+catkin_make 从 msg 文件生成 Python 类，详见[[计算图模型#构建自定义消息]]
 
 -   package/msg/Foo.msg → package.msg.Foo
 
@@ -102,7 +104,7 @@ def listener():
 
 # 服务
 
-catkin_make从srv文件生成Python源代码，并创建三个类：服务定义、请求消息和响应消息。这些类的名称直接来自srv文件名：
+catkin_make 从 srv 文件生成 Python 源代码，并创建三个类：服务定义、请求消息和响应消息。这些类的名称直接来自 srv 文件名：
 
 -   package/srv/Foo.srv → package.srv.Foo
 -   package/srv/Foo.srv → package.srv.FooRequest
@@ -125,7 +127,7 @@ except rospy.ServiceException as exc:
 
 ## 提供服务
 
-通过创建一个带有回调函数的rospy.Service实例来提供服务，以便在收到新请求时调用。每个传入请求都在自己的线程中处理，因此服务**必须是线程安全的**。
+通过创建一个带有回调函数的 rospy.Service 实例来提供服务，以便在收到新请求时调用。每个传入请求都在自己的线程中处理，因此服务**必须是线程安全的**。
 
 ```python
 def add_two_ints(req):
@@ -151,7 +153,7 @@ def add_two_ints_server():
 
 rospy.get_param(param_name)
 
-从参数服务器获取值。如果参数未设置，可以选择传递默认值。名称相对于节点的命名空间进行解析。如果使用get_param()获取命名空间，则返回字典，其键等于该命名空间中的参数值。如果未设置参数，则会引发KeyError。
+从参数服务器获取值。如果参数未设置，可以选择传递默认值。名称相对于节点的命名空间进行解析。如果使用 get_param()获取命名空间，则返回字典，其键等于该命名空间中的参数值。如果未设置参数，则会引发 KeyError。
 
 ```python
 global_name = rospy.get_param("/global_name")
@@ -192,13 +194,13 @@ rospy.get_param('gains/p') #应该返回1
 
 rospy.has_param(param_name)
 
-如果设置了参数，则返回True，否则返回False。
+如果设置了参数，则返回 True，否则返回 False。
 
 ## 删除参数
 
 rospy.delete_param(param_name)
 
-从参数服务器中删除参数。必须设置参数（如果没有设置，则会引发KeyError）。名称相对于节点的命名空间进行解析。
+从参数服务器中删除参数。必须设置参数（如果没有设置，则会引发 KeyError）。名称相对于节点的命名空间进行解析。
 
 ```python
 try:
@@ -217,14 +219,14 @@ rospy.get_param_names()
 
 rospy.search_param(param_name)
 
-查找最接近的参数名称，从私有命名空间开始，向上搜索到全局命名空间。如果找不到匹配项，则返回None。
+查找最接近的参数名称，从私有命名空间开始，向上搜索到全局命名空间。如果找不到匹配项，则返回 None。
 
 ```python
 param_name = rospy.search_param('global_example')
 v = rospy.get_param(param_name)
 ```
 
-如果此代码出现在节点/foo/bar中，rospy.search_param将尝试按顺序寻找参数
+如果此代码出现在节点/foo/bar 中，rospy.search_param 将尝试按顺序寻找参数
 
 1.  /foo/bar/global_example
 2.  /foo/global_example
@@ -233,32 +235,64 @@ v = rospy.get_param(param_name)
 # 日志
 
 ```python
-rospy.logdebug(msg, *args, **kwargs)
-rospy.loginfo(msg, *args, **kwargs)
-rospy.logwarn(msg, *args, **kwargs)
-rospy.logerr(msg, *args, **kwargs)
-rospy.logfatal(msg, *args, **kwargs)
+rospy.log{debug|info|warn|err|fatal}(msg, *args, **kwargs)
 ```
 
-如果msg是格式化字符串，可以单独传递字符串的参数，如
+如果 msg 是格式化字符串，可以单独传递字符串的参数，如
 
 ```python
 rospy.logerr("%s returned the invalid value %s", other_name, other_value)
 ```
 
 |          | Debug | Info | Warn | Error | Fatal |
-| -------- | :---: | :---: | :---: | :---: | :---: |
-| stdout   |       | X   |      |       |       |
-| stderr   |       |      | X   | X    | X    |
-| log file | X    | X   | X   | X    | X    |
-| /rosout  |      | X   | X   | X    | X     |
+| -------- |:-----:|:----:|:----:|:-----:|:-----:|
+| stdout   |       |  X   |      |       |       |
+| stderr   |       |      |  X   |   X   |   X   |
+| log file |   X   |  X   |  X   |   X   |   X   |
+| /rosout  |       |  X   |  X   |   X   |   X   |
 
-/rosout的输出级别在初始化节点时设置，stdout是否会输出到屏幕上取决于launch文件中output参数的值。
+/rosout 的输出级别在 [[#初始化节点]]时设置，stdout 是否会输出到屏幕上取决于 launch 文件中 output 参数的值。
 
-定时记录日志，需要一直被运行
+定时记录日志，需要一直被运行：
 
 ```python
 while True:
     rospy.loginfo_throttle(60, "This message will print every 60 seconds")
     rospy.loginfo_once("This message will print only once")
+```
+
+# 技巧
+
+## 异常字符串解析
+
+服务中抛出异常时，调用者捕获的异常字符串可能包含 16 进制内容，如
+
+	service [/xxx] responded with an error: b'service cannot process request: \xe6\x9c\xaa\xe6\xa3\x80...
+
+此时可以这样解码出 utf-8 字符：
+
+```python
+str(exp).encode('utf-8').decode('unicode_escape').encode('latin1').decode('utf-8')
+```
+
+## 异常 traceback 格式
+
+未捕获异常的 traceback 由 `/opt/ros/melodic/lib/python2.7/dist-packages/rospy/impl/tcpros_service.py` 中的函数 `error_handler` 记录为日志：
+
+```python
+def error_handler(self, e, exc_type, exc_value, tb):
+logerr("Error processing request: %s\n%s" % (e, traceback.format_exception(exc_type, exc_value, tb)))
+```
+
+此时产生的日志中 traceback 为列表，难以阅读：
+
+```
+[ERROR] [1680007708.746949]: Error processing request:['Traceback (most recent call last):\n', '  File "/opt/ros/melodic/lib/python2.7/dist-packages/rospy/impl/tcpros_service.py", line 633,in _handle_request\n    response = convert_return_to_response(self.handler(request), self.response_class)\n', ...
+```
+
+如下修改即可恢复格式：
+
+```python
+def error_handler(self, e, exc_type, exc_value, tb):
+logerr("Error processing request: %s\n%s" % (e, traceback.format_exc()))
 ```
