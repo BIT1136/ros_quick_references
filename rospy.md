@@ -29,6 +29,7 @@ rospy.init_node('my_node_name')
 ## 节点状态
 
 ```python
+rospy.get_name()               # 返回节点名称
 rospy.is_shutdown()            # 返回节点是否关闭
 rospy.spin()                   # 当前节点关闭前阻止python退出
 rospy.on_shutdown(callback)    # 注册关闭节点时的回调函数
@@ -91,8 +92,8 @@ pub = rospy.Publisher('topic_name', std_msgs.msg.String, queue_size=10)
 ## 接收消息（订阅主题）
 
 ```python
-def callback(data):
-    rospy.loginfo("I heard %s",data.data)
+def callback(msg):
+    rospy.loginfo("I heard %s",msg.data)
     
 def listener():
     rospy.init_node('node_name')
@@ -151,7 +152,7 @@ def add_two_ints_server():
 
 ## 获取参数
 
-rospy.get_param(param_name)
+	rospy.get_param(param_name)
 
 从参数服务器获取值。如果参数未设置，可以选择传递默认值。名称相对于节点的命名空间进行解析。如果使用 get_param()获取命名空间，则返回字典，其键等于该命名空间中的参数值。如果未设置参数，则会引发 KeyError。
 
@@ -168,7 +169,7 @@ p, i, d = gains['p'], gains['i'], gains['d']
 
 ## 设置参数
 
-rospy.set_param(param_name, param_value)
+	rospy.set_param(param_name, param_value)
 
 可以将参数设置为存储字符串、整数、浮点数、布尔值、列表和字典。字典必须有字符串键，因为它们被认为是命名空间。
 
@@ -192,13 +193,13 @@ rospy.get_param('gains/p') #应该返回1
 
 ## 参数存在性
 
-rospy.has_param(param_name)
+	rospy.has_param(param_name)
 
 如果设置了参数，则返回 True，否则返回 False。
 
 ## 删除参数
 
-rospy.delete_param(param_name)
+	rospy.delete_param(param_name)
 
 从参数服务器中删除参数。必须设置参数（如果没有设置，则会引发 KeyError）。名称相对于节点的命名空间进行解析。
 
@@ -211,13 +212,13 @@ except KeyError:
 
 ## 获取参数名称列表
 
-rospy.get_param_names()
+	rospy.get_param_names()
 
 返回参数服务器上所有参数名称的列表。
 
 ## 搜索参数键
 
-rospy.search_param(param_name)
+	rospy.search_param(param_name)
 
 查找最接近的参数名称，从私有命名空间开始，向上搜索到全局命名空间。如果找不到匹配项，则返回 None。
 
@@ -251,7 +252,7 @@ rospy.logerr("%s returned the invalid value %s", other_name, other_value)
 | log file |   X   |  X   |  X   |   X   |   X   |
 | /rosout  |       |  X   |  X   |   X   |   X   |
 
-/rosout 的输出级别在 [[#初始化节点]]时设置，stdout 是否会输出到屏幕上取决于 launch 文件中 output 参数的值。
+/rosout 的输出级别在 [[#初始化节点]]时设置，标准输出是否会打印到屏幕上取决于 launch 文件中 output 参数的值。
 
 定时记录日志，需要一直被运行：
 
@@ -259,6 +260,113 @@ rospy.logerr("%s returned the invalid value %s", other_name, other_value)
 while True:
     rospy.loginfo_throttle(60, "This message will print every 60 seconds")
     rospy.loginfo_once("This message will print only once")
+```
+
+# 创建包
+
+运行于 catkin 工作空间根目录下：
+
+```shell
+PKG_NAME="name"
+
+mkdir ${PKG_NAME}
+mkdir ${PKG_NAME}/src
+mkdir ${PKG_NAME}/nodes
+mkdir ${PKG_NAME}/launch
+mkdir ${PKG_NAME}/msg
+mkdir ${PKG_NAME}/srv
+
+cd ${PKG_NAME}
+
+echo "<?xml version=\"1.0\"?>
+<package format=\"2\">
+  <name>${PKG_NAME}</name>
+  <version>1.0.0</version>
+  <description>TODO</description>
+  <maintainer email=\"todo@todo.todo\">TODO</maintainer>
+  <license>TODO</license>
+
+  <depend>rospy</depend>
+  <buildtool_depend>catkin</buildtool_depend>
+</package>" > package.xml
+echo "cmake_minimum_required(VERSION 3.0.2)
+project(${PKG_NAME})
+
+find_package(catkin REQUIRED COMPONENTS
+  rospy
+  message_generation
+)
+
+catkin_python_setup()
+
+add_message_files(
+  FILES
+  mymsg.msg
+)
+
+add_service_files(
+  FILES
+  mysrv.srv
+)
+
+generate_messages(
+  DEPENDENCIES
+)
+
+catkin_package(
+)
+
+include_directories(
+  \${catkin_INCLUDE_DIRS}
+)" > CMakeLists.txt
+echo "from distutils.core import setup
+from catkin_pkg.python_setup import generate_distutils_setup
+
+setup_args = generate_distutils_setup(
+    packages=[\"${PKG_NAME}\"],
+    package_dir={\"\": \"src\"},
+)
+
+setup(**setup_args)" > setup.py
+
+cd src
+
+echo "import ${PKG_NAME}
+" > utils.py
+
+cd ../nodes
+
+echo "#!/usr/bin/env python
+
+import rospy
+
+from ${PKG_NAME}.msg import mymsg
+from ${PKG_NAME}.srv import mysrv, mysrvResponse
+import utils
+
+if __name__ == \"__main__\":
+    rospy.init_node(\"${PKG_NAME}_server\")
+    rospy.spin()" > node.py
+
+chmod +x ./node.py
+
+cd ../launch
+
+echo "<launch>
+  <node pkg=\"${PKG_NAME}\" type=\"node.py\" name=\"${PKG_NAME}_server\" output=\"screen\"/>
+</launch>" > node.launch
+
+cd ../msg
+
+echo "int64 a" > mymsg.msg
+
+cd ../srv
+
+echo "int64 a
+---
+int64 b" > mysrv.srv
+
+echo "手动向.vscode/settings.json的python.analysis.extraPaths中添加\"./src/${PKG_NAME}/src"
 ```
 
 # 技巧
@@ -296,3 +404,7 @@ logerr("Error processing request: %s\n%s" % (e, traceback.format_exception(exc_t
 def error_handler(self, e, exc_type, exc_value, tb):
 logerr("Error processing request: %s\n%s" % (e, traceback.format_exc()))
 ```
+
+## 工作目录
+
+由 [[命令行工具#rosrun|rosrun]] 启动的 python 脚本，工作路径为 rosrun 的执行路径；由 [[命令行工具#roslaunch|roslaunch]] 启动则为 `~/.ros`。

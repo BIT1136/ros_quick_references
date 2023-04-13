@@ -5,7 +5,7 @@ launch 文件遵循 [[XML#语法|xml语法]]，文件内容包围在一对\<laun
 指定一个要启动的 ROS 节点，不保证启动顺序。
 
 ```xml
-<node name="listener1" pkg="rospy_tutorials" type="listener.py" args="--test" respawn="true" />
+<node pkg="rospy_tutorials" type="listener.py" name="listener1" args="--test" respawn="true" />
 ```
 
 ### 属性
@@ -13,12 +13,13 @@ launch 文件遵循 [[XML#语法|xml语法]]，文件内容包围在一对\<laun
 - **pkg**：表示节点所在的功能包名称，如 pkg = “tf_lidar_task”
 - **type**：表示节点的可执行文件名称，如 type = “lidar_broadcaster”
 - **name**：表示该节点在 ROS 系统中运行时的节点名，覆盖 ros::init 赋予的名称
-- output="log|screen"：控制是否将日志信息打印在终端界面上，默认为 log
+- output="log|screen"：控制是否将低于 WARN 的日志信息和标准输出打印在终端界面上，默认为 log
+- cwd="ROS_HOME|node"：如果是 node，则节点的工作目录将设置为与节点的可执行文件相同的目录，默认为 ROS_HOME 即 `~/.ros`
 - respawn="true|false"：表示在检测到节点停止时是否会自动重启，默认为 false
 - respawn_delay="30"：如果 respawn 为真，在检测到节点故障后重启节点前等待的秒数，默认为0
 - required="true|false"：表示该节点是否必须要启动；如为真，当该节点终止时 launch 文件中的其他节点也被终止
 - ns="foo"：为节点内的相对名称添加命名空间前缀，避免命名冲突
-- args="arg 1 arg 2 arg 3"：表示节点需要的输入参数
+- args="arg1 arg2 arg3"：表示节点需要的输入参数
 
 ## \<include>
 
@@ -41,8 +42,8 @@ launch 文件遵循 [[XML#语法|xml语法]]，文件内容包围在一对\<laun
 - **name**="namespace/name"：参数名称，可以包含命名空间
 - value="value"：定义参数的值。如果省略则必须指定 binfile、textfile 或命令。
 - type="str|int|double|bool|yaml"指定参数的类型。如果没有指定类型将尝试自动确定：
-	- 带有'.'的数字是浮点，否则是整数；
-	- "true"和"false"是布尔值（不区分大小写）。
+	- 带有'.'的数字是浮点，否则是整数
+	- "true"和"false"是布尔值（不区分大小写）
 	- 所有其他值都是字符串
 - textfile="\$(find pkg-name)/path/file.txt"文件的内容将被读取并存储为字符串。该文件必须可在本地访问，但强烈建议使用与包相关的$(find)/file.txt 语法来指定位置。
 - binfile="\$(find pkg-name)/path/file"文件的内容将被读取并存储为 base 64 编码的 XML-RPC 二进制对象。该文件必须可在本地访问，但强烈建议使用与包相关的$(find)/file.txt 语法来指定位置。   
@@ -94,3 +95,10 @@ launch 文件遵循 [[XML#语法|xml语法]]，文件内容包围在一对\<laun
 <remap from="/turtlebot/cmd_vel"to"/cmd_vel"/>
 ```
 
+## 调用服务
+
+下面的元素调用了 `/nodename/set_logger_level` 服务。
+
+```xml
+<node pkg="rosservice" type="rosservice" name="set_move_base_log_level" args="call --wait /nodename/set_logger_level 'rosout' 'debug'" />
+```

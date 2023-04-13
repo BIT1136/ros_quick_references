@@ -174,3 +174,22 @@ https://blog.csdn.net/qq_38288618/article/details/103398428
 http://docs.ros.org/en/jade/api/catkin/html/user_guide/setup_dot_py.html
 
 #待整理 
+
+
+在包的根目录下创建 setup.py，指定包名和搜索模块的路径：
+
+```python
+from distutils.core import setup
+from catkin_pkg.python_setup import generate_distutils_setup
+
+setup_args = generate_distutils_setup(
+    packages=["package_name"],
+    package_dir={"": "src"},
+)
+
+setup(**setup_args)
+```
+
+这会在 `catkin_make` 后将相应的导入路径设置存储到 `devel/lib/python2.7/dist-packages/name/__init__.py`，在 `import package_name` 或其中的模块后生效。
+
+因此，未使用的 `import package_name` 不一定可以安全地删除。
