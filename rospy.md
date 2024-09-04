@@ -40,7 +40,7 @@ rospy.signal_shutdown(reason)  # 手动关闭节点，reason为字符串
 
 # 消息
 
-catkin_make 从 msg 文件生成 Python 类，详见[[计算图模型#构建自定义消息]]
+catkin_make 从 msg 文件生成 Python 类，详见[[基本概念#构建自定义消息]]
 
 -   package/msg/Foo.msg → package.msg.Foo
 
@@ -89,7 +89,11 @@ pub = rospy.Publisher('topic_name', std_msgs.msg.String, queue_size=10)
 	pub.publish(b=255)
 	```
 
-## 接收消息（订阅主题）
+## 接收消息/订阅主题
+
+```python
+msg = rospy.wait_for_message("topic", Type, timeout)
+```
 
 ```python
 def callback(msg):
@@ -264,7 +268,7 @@ while True:
 
 # 创建包
 
-运行于 catkin 工作空间根目录下：
+保存为 sh 脚本运行于 catkin 源代码空间下：
 
 ```shell
 PKG_NAME="name"
@@ -366,7 +370,7 @@ echo "int64 a
 ---
 int64 b" > mysrv.srv
 
-echo "手动向.vscode/settings.json的python.analysis.extraPaths中添加\"./src/${PKG_NAME}/src"
+echo "请手动向.vscode/settings.json的python.analysis.extraPaths中添加\"./src/${PKG_NAME}/src"
 ```
 
 # 技巧
@@ -389,7 +393,7 @@ str(exp).encode('utf-8').decode('unicode_escape').encode('latin1').decode('utf-8
 
 ```python
 def error_handler(self, e, exc_type, exc_value, tb):
-logerr("Error processing request: %s\n%s" % (e, traceback.format_exception(exc_type, exc_value, tb)))
+	logerr("Error processing request: %s\n%s" % (e, 	traceback.format_exception(exc_type, exc_value, tb)))
 ```
 
 此时产生的日志中 traceback 为列表，难以阅读：
@@ -402,9 +406,9 @@ logerr("Error processing request: %s\n%s" % (e, traceback.format_exception(exc_t
 
 ```python
 def error_handler(self, e, exc_type, exc_value, tb):
-logerr("Error processing request: %s\n%s" % (e, traceback.format_exc()))
+	logerr("Error processing request: %s\n%s" % (e, traceback.format_exc()))
 ```
 
 ## 工作目录
 
-由 [[命令行工具#rosrun|rosrun]] 启动的 python 脚本，工作路径为 rosrun 的执行路径；由 [[命令行工具#roslaunch|roslaunch]] 启动则为 `~/.ros`。
+由 [[命令行工具#rosrun|rosrun]] 启动的 python 脚本，工作路径 `os.getcwd()` 为 rosrun 的执行路径；由 [[命令行工具#roslaunch|roslaunch]] 启动则为 `~/.ros`。

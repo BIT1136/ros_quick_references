@@ -29,7 +29,7 @@ catkin_create_pkg [--meta] [-V PKG_VERSION] [-D DESCRIPTION]
 
 # Catkin 工作空间
 
-在其中运行 `catkin_make`
+在其中运行构建工具
 
 ```
 .
@@ -64,7 +64,7 @@ catkin_create_pkg [--meta] [-V PKG_VERSION] [-D DESCRIPTION]
 
 # catkin_make
 
-递归地查找 src/中的包进行构建
+递归地查找 src/中的包进行构建。缺点是没有故障隔离，且修改一个包的配置文件需要重新配置所有包。建议使用新的 [[#catkin]] 构建工具。
 
 ```
 catkin_make [args]
@@ -86,6 +86,17 @@ catkin_make [args]
                         用来覆盖由于不同编译工具产生的错误
 ```
 
+这一命令相当于
+
+```shell
+mkdir build
+cd build
+cmake ../src -DCATKIN_DEVEL_SPACE=../devel -DCMAKE_INSTALL_PREFIX=../install
+make -j<number of cores> -l<number of cores> [target]
+```
+
+`--pkg` 参数可能不工作，改用 `--only-pkg-with-deps`。
+
 ## Python 3 兼容性
 
 使用 catkin_make 编译时要使用 python 3 进行消息和服务的代码生成，只需要运行
@@ -95,6 +106,27 @@ catkin_make [args]
 在这里指定的 python 解释器需要能访问 rospkg 和 empy 包，此时生成的 python 类文件位于 `devel/lib/python3/dist-packages/package_name`
 
 要使 python3兼容 tf，参考[这里](https://zhuanlan.zhihu.com/p/578530492)
+
+# catkin
+
+catkin 是基于 python 的新一代构建工具
+
+#待整理 [quickstart](https://catkin-tools.readthedocs.io/en/latest/quick_start.html)
+
+```
+catkin [options] <verb> [arguments]
+
+  build                 构建包
+  config                配置工作空间
+  clean                 清空工作空间
+  create                创建包
+  env                   配置环境变量
+  init                  初始化
+  list                  查看包信息
+  locate                定位编译目录
+  profile               指定编译配置
+  test                  测试包
+```
 
 # package.xml（格式 2）
 
@@ -161,9 +193,11 @@ catkin_make [args]
 
 ## 生成消息和服务
 
-见[[计算图模型#构建自定义消息]]和[[计算图模型#构建自定义服务]]。
+见[[基本概念#构建自定义消息]]和[[基本概念#构建自定义服务]]。
 
 这些宏必须在 `catkin_package()` 之前调用。
+
+设置[[环境变量#ROS_LANG_DISABLE]] 来禁用某些语言的代码生成。
 
 http://wiki.ros.org/catkin/CMakeLists.txt
 https://blog.csdn.net/jinking01/article/details/102891918
@@ -174,7 +208,6 @@ https://blog.csdn.net/qq_38288618/article/details/103398428
 http://docs.ros.org/en/jade/api/catkin/html/user_guide/setup_dot_py.html
 
 #待整理 
-
 
 在包的根目录下创建 setup.py，指定包名和搜索模块的路径：
 
@@ -190,6 +223,6 @@ setup_args = generate_distutils_setup(
 setup(**setup_args)
 ```
 
-这会在 `catkin_make` 后将相应的导入路径设置存储到 `devel/lib/python2.7/dist-packages/name/__init__.py`，在 `import package_name` 或其中的模块后生效。
+这会在 `catkin_make` 后将相应的导入路径设置存储到 `devel/lib/python3/dist-packages/package_name/__init__.py`，在 `import package_name` 或其中的模块后生效。
 
 因此，未使用的 `import package_name` 不一定可以安全地删除。

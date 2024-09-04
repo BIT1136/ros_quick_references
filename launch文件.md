@@ -1,4 +1,4 @@
-launch 文件遵循 [[XML#语法|xml语法]]，文件内容包围在一对\<launch>标签内。加粗的属性是必须的。
+launch 文件遵循 [[XML#语法|xml语法]]，文件内容包围在一对\<launch>标签内，加粗的属性是必须的。使用 [[命令行工具#roslaunch|roslaunch]] 命令来运行。
 
 ## \<node>
 
